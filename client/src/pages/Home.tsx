@@ -1,24 +1,81 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronDown, Phone, Mail, MessageCircle, Plus, Minus } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, ArrowRight } from 'lucide-react';
 import ContactForm from '@/components/ContactForm';
-import HeroAnimation from '@/components/HeroAnimation';
-
-/**
- * DTL Customs - Premium Autóüveg-fóliázás Landing Page
- * Design Philosophy: Premium Automotive Studio Minimalism
- * - Negative space as luxury
- * - Cinematic realism
- * - Restrained ice blue accent color
- * - Editorial typography (Sora + Inter)
- * - Smooth, purposeful motion
- */
 
 export default function Home() {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Sticky nav background on scroll
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const updateCanvasSize = () => {
+      const rect = canvas.parentElement?.getBoundingClientRect();
+      if (rect) {
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+      }
+    };
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
+
+    const cycleDuration = 14000;
+    let startTime = Date.now();
+
+    const tintColors = [
+      { r: 255, g: 255, b: 255, a: 0 },
+      { r: 220, g: 220, b: 220, a: 0.25 },
+      { r: 150, g: 170, b: 190, a: 0.45 },
+      { r: 40, g: 60, b: 90, a: 0.65 },
+    ];
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = (elapsed % cycleDuration) / cycleDuration;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      let currentTintIndex = Math.floor(progress * (tintColors.length - 1));
+      let nextTintIndex = (currentTintIndex + 1) % tintColors.length;
+      let lerpProgress = (progress * (tintColors.length - 1)) % 1;
+
+      const easeProgress = lerpProgress < 0.5 
+        ? 2 * lerpProgress * lerpProgress 
+        : -1 + (4 - 2 * lerpProgress) * lerpProgress;
+
+      const currentTint = tintColors[currentTintIndex];
+      const nextTint = tintColors[nextTintIndex];
+
+      const tintColor = {
+        r: Math.round(currentTint.r + (nextTint.r - currentTint.r) * easeProgress),
+        g: Math.round(currentTint.g + (nextTint.g - currentTint.g) * easeProgress),
+        b: Math.round(currentTint.b + (nextTint.b - currentTint.b) * easeProgress),
+        a: currentTint.a + (nextTint.a - currentTint.a) * easeProgress,
+      };
+
+      ctx.fillStyle = `rgba(${tintColor.r}, ${tintColor.g}, ${tintColor.b}, ${tintColor.a})`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const reflectionGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      reflectionGradient.addColorStop(0, `rgba(255, 255, 255, ${0.15 - tintColor.a * 0.2})`);
+      reflectionGradient.addColorStop(0.5, `rgba(255, 255, 255, 0)`);
+      reflectionGradient.addColorStop(1, `rgba(0, 0, 0, ${tintColor.a * 0.08})`);
+      ctx.fillStyle = reflectionGradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      requestAnimationFrame(animate);
+    };
+
+    animate();
+    return () => window.removeEventListener('resize', updateCanvasSize);
+  }, []);
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
@@ -27,248 +84,199 @@ export default function Home() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-
-
-  const benefits = [
-    { title: 'UV- és hővédelem', description: 'Csökkent hőterhelés és UV sugárzás' },
-    { title: 'Fényvédelem', description: 'Csökkentett zavaró fény az utastérben' },
-    { title: 'Privátabb utastér', description: 'Diszkrétebb megjelenés és belső védelem' },
-    { title: 'Gyors kapcsolat', description: 'Messengeren, telefonon vagy emailen' },
-  ];
-
-  const services = [
-    {
-      title: 'Hő- és UV-védelem',
-      description: 'Prémium fólia technológia, amely csökkenti a nyári hőterhelést és megvédi az utasteret az UV sugárzástól.',
-    },
-    {
-      title: 'Fénycsökkentés',
-      description: 'Elegáns árnyékolás, amely csökkenti a zavaró fényt és javítja a vezetési kényelmet.',
-    },
-    {
-      title: 'Privátabb utastér',
-      description: 'Diszkrét megjelenés, amely megvédi az utasteret és javítja az autó esztétikáját.',
-    },
-    {
-      title: 'Letisztult, prémium megjelenés',
-      description: 'Profi kivitelezés, amely az autó értékét és stílusát emeli.',
-    },
-  ];
-
-  const process = [
-    { step: '1', title: 'Kapcsolatfelvétel', description: 'Messengeren, telefonon vagy emailen' },
-    { step: '2', title: 'Egyeztetés és időpont', description: 'Személyre szabott konzultáció' },
-    { step: '3', title: 'Kivitelezés', description: 'Profi munka, prémium anyagok' },
-  ];
-
   const faqItems = [
     {
-      question: 'Mennyire sötét fóliát érdemes választani?',
-      answer: 'A fólia sötétsége személyes preferencia kérdése. Ajánlott a könnyű vagy közepes árnyékolás, amely jó egyensúlyt teremt a privátság és a láthatóság között. Konzultálunk az Ön igényei szerint.',
+      question: 'Milyen szintű árnyékolást ajánlotok?',
+      answer: 'Az ideális árnyékolás az Ön igényeitől függ. Ajánlunk könnyű (20%), közepes (50%) vagy prémium sötét (70%) fóliákat. Konzultáció során személyre szabott ajánlatot adunk.',
     },
     {
-      question: 'Miben segít a hő- és UV-védelem?',
-      answer: 'A prémium fólia csökkenti a nyári hőterhelést, megvédi az utasteret az UV sugárzástól, és javítja az autó belsejének hosszú élettartamát.',
+      question: 'Mennyi ideig tart a fóliázás?',
+      answer: 'Az átlagos autó fóliázása 2-4 órát vesz igénybe. Az egyeztetés során pontosan meghatározzuk az időpontot.',
     },
     {
-      question: 'Mennyi ideig tart az egyeztetés és a kivitelezés?',
-      answer: 'Az egyeztetés általában 15-20 percet vesz igénybe. A kivitelezés az autó típusától függően 2-4 órát szokott tartani.',
+      question: 'Milyen az élettartama a fóliának?',
+      answer: 'Prémium fóliáink 5-10 évig tartanak, attól függően, hogy mennyire kitett az autó a napsugárzásnak.',
     },
     {
-      question: 'Hogyan lehet időpontot kérni?',
-      answer: 'Messengeren, telefonon (+36 30 399 9625) vagy emailen (dtlcustoms@info.com) lehet kapcsolatba lépni velünk. Szerda-vasárnap vagyunk nyitva.',
-    },
-    {
-      question: 'Mire figyeljek a fóliázás után?',
-      answer: 'Az első 48 órában kerülje az autó mosást. Utána normál gondozás ajánlott. A fólia hosszú élettartamú és könnyen kezelhető.',
+      question: 'Hogyan kell gondozni a fóliát?',
+      answer: 'Az első 48 órában kerülje az autó mosást. Utána normál gondozás ajánlott. A fólia könnyen kezelhető és hosszú élettartamú.',
     },
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="bg-white text-black overflow-hidden">
       {/* Navigation */}
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled ? 'bg-background/95 backdrop-blur shadow-sm' : 'bg-transparent'
-        }`}
-      >
-        <div className="container flex items-center justify-between py-4">
-          <div className="font-display text-2xl font-bold">DTL Customs</div>
-          <div className="hidden md:flex gap-8 items-center">
-            <a href="#services" className="font-body text-sm hover:text-accent transition">
-              Szolgáltatások
-            </a>
-            <a href="#why" className="font-body text-sm hover:text-accent transition">
-              Miért minket?
-            </a>
-            <a href="#gallery" className="font-body text-sm hover:text-accent transition">
-              Munkáink
-            </a>
-            <a href="#faq" className="font-body text-sm hover:text-accent transition">
-              GYIK
-            </a>
-            <a href="#contact" className="font-body text-sm hover:text-accent transition">
-              Kapcsolat
-            </a>
-            <button className="btn-primary">Időpontfoglalás</button>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled ? 'bg-white/95 backdrop-blur-md border-b border-black/5' : 'bg-transparent'
+      }`}>
+        <div className="container max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-xl font-bold tracking-tight"
+          >
+            DTL CUSTOMS
+          </motion.div>
+          <div className="hidden md:flex items-center gap-12">
+            <a href="#services" className="text-sm hover:text-accent transition">Szolgáltatások</a>
+            <a href="#process" className="text-sm hover:text-accent transition">Folyamat</a>
+            <a href="#faq" className="text-sm hover:text-accent transition">GYIK</a>
+            <a href="#contact" className="text-sm hover:text-accent transition">Kapcsolat</a>
           </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="btn-primary text-sm"
+          >
+            Időpontfoglalás
+          </motion.button>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="relative w-full h-screen bg-gradient-to-b from-[#0F0F0F] to-[#1A1A1A] flex items-center overflow-hidden pt-20">
-        <div className="container grid grid-cols-1 lg:grid-cols-2 gap-12 items-center h-full">
-          {/* Left: Copy & CTA */}
-          <motion.div
-            initial={{ opacity: 0, x: -40 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="flex flex-col justify-center space-y-6 z-10"
-          >
-            <h1 className="hero-headline text-white">
-              Prémium autóüveg-fóliázás
-            </h1>
-            <p className="hero-subheadline text-white/80 max-w-md">
-              UV- és hővédelem, diszkrétebb megjelenés, kényelmesebb utastér. Minőségi kivitelezés, gyors kapcsolatfelvétel, prémium megjelenés.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <button className="btn-primary">Időpontot kérek</button>
-              <button className="btn-secondary bg-white/10 border-white/30 text-white hover:bg-white/20">
-                Kapcsolat Messengeren
-              </button>
-            </div>
-            <p className="font-body text-sm text-white/60 pt-4">
-              Telefonos egyeztetés • Messenger • Nyitva: szerda–vasárnap
-            </p>
-          </motion.div>
+      <section className="relative w-full h-screen bg-white flex items-center pt-20 overflow-hidden">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <motion.img
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.2 }}
+            src="https://d2xsxph8kpxj0f.cloudfront.net/310519663484977226/PDCnGRWrpwew4UbLR7rtwx/hero-car-side-profile-dWe3yM5yRoXB4HtFKUiHPy.webp"
+            alt="Premium car"
+            className="w-full max-w-6xl h-auto object-contain"
+          />
 
-          {/* Right: Animated Car with Advanced Tint Animation */}
-          <div className="relative h-full flex items-center justify-center">
-            <HeroAnimation carImageUrl="https://d2xsxph8kpxj0f.cloudfront.net/310519663484977226/PDCnGRWrpwew4UbLR7rtwx/hero-car-side-profile-dWe3yM5yRoXB4HtFKUiHPy.webp" />
-          </div>
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 w-full h-full pointer-events-none"
+            style={{
+              mixBlendMode: 'multiply',
+              opacity: 0.85,
+            }}
+          />
         </div>
 
-        {/* Scroll Indicator */}
+        <div className="container max-w-7xl mx-auto px-6 relative z-10 flex items-center h-full">
+          <motion.div
+            initial={{ opacity: 0, x: -60 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="max-w-xl"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="mb-6"
+            >
+              <span className="text-accent text-sm font-semibold tracking-widest uppercase">
+                Prémium Autóüveg-Fóliázás
+              </span>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.8 }}
+              className="text-7xl md:text-8xl font-black leading-none mb-8 tracking-tight"
+            >
+              Prémium
+              <br />
+              Megjelenés
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1 }}
+              className="text-lg text-black/70 mb-8 max-w-md leading-relaxed"
+            >
+              Professzionális autóüveg-fóliázás, amely megvédi az autót, javítja a stílust, és biztosítja a privátságot.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.2 }}
+              className="flex gap-4"
+            >
+              <motion.button
+                whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(74, 159, 216, 0.3)' }}
+                whileTap={{ scale: 0.95 }}
+                className="btn-primary px-8 py-4 text-base font-semibold"
+              >
+                Időpontot kérek
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-8 py-4 border-2 border-black hover:bg-black hover:text-white transition-all font-semibold rounded-lg"
+              >
+                Tudj meg többet
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        </div>
+
         <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+          animate={{ y: [0, 12, 0] }}
+          transition={{ duration: 2.5, repeat: Infinity }}
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10"
         >
-          <ChevronDown className="w-6 h-6 text-white/50" />
+          <ChevronDown className="w-6 h-6 text-black/40" />
         </motion.div>
       </section>
 
-      {/* Quick Value Strip */}
-      <section className="bg-background py-16 border-b border-border">
-        <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {benefits.map((benefit, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="space-y-2"
-              >
-                <h3 className="font-heading text-lg text-foreground">{benefit.title}</h3>
-                <p className="font-body text-sm text-foreground/70">{benefit.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Why It Matters Section */}
-      <section id="why" className="bg-background py-24">
-        <div className="container">
+      {/* Services Section */}
+      <section id="services" className="bg-white py-32 border-t border-black/5">
+        <div className="container max-w-7xl mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-16"
+            transition={{ duration: 0.8 }}
+            className="mb-20"
           >
-            <h2 className="section-headline">Nem csak jól néz ki. Jobban is használható lesz az autód.</h2>
+            <h2 className="text-6xl md:text-7xl font-black mb-6">
+              Szolgáltatások
+            </h2>
+            <p className="text-xl text-black/60 max-w-2xl">
+              Prémium fóliázási megoldások, amelyek megvédik az autót és javítják a megjelenést.
+            </p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              className="space-y-6"
-            >
-              <div>
-                <h3 className="font-heading text-xl mb-2">Nyári hőterhelés csökkentése</h3>
-                <p className="font-body text-foreground/70">
-                  A prémium fólia jelentősen csökkenti az autó belsejében a hőterhelést, így kényelmesebb és gazdaságosabb az utazás.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-heading text-xl mb-2">Zavaró fény ellen</h3>
-                <p className="font-body text-foreground/70">
-                  Az árnyékolás csökkenti a zavaró fényt, javítva a vezetési kényelmet és a biztonságot.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-heading text-xl mb-2">Privátabb utastér</h3>
-                <p className="font-body text-foreground/70">
-                  Diszkrét megjelenés, amely megvédi az utasteret és javítja az autó esztétikáját.
-                </p>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              className="space-y-6"
-            >
-              <div>
-                <h3 className="font-heading text-xl mb-2">UV-védelem</h3>
-                <p className="font-body text-foreground/70">
-                  Megvédi az autó belsejét az UV sugárzástól, hosszabbítva az utastér és a bútorok élettartamát.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-heading text-xl mb-2">Komfortosabb vezetési élmény</h3>
-                <p className="font-body text-foreground/70">
-                  Az összes tényező együtt egy jobb, komfortosabb és biztonságosabb vezetési élményt nyújt.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-heading text-xl mb-2">Igényesebb megjelenés</h3>
-                <p className="font-body text-foreground/70">
-                  A prémium fóliázás az autó értékét és stílusát emeli, professzionális és luxus hatást kelt.
-                </p>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Services Section */}
-      <section id="services" className="bg-secondary/30 py-24 border-y border-border">
-        <div className="container">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-16"
-          >
-            <h2 className="section-headline">Mit ad a prémium autóüveg-fóliázás?</h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {services.map((service, idx) => (
+            {[
+              {
+                title: 'UV- és Hővédelem',
+                description: 'Prémium fólia technológia, amely csökkenti a nyári hőterhelést és megvédi az utasteret az UV sugárzástól.',
+                icon: '☀️',
+              },
+              {
+                title: 'Fényvédelem',
+                description: 'Elegáns árnyékolás, amely csökkenti a zavaró fényt és javítja a vezetési kényelmet.',
+                icon: '🌙',
+              },
+              {
+                title: 'Privátabb Utastér',
+                description: 'Diszkrét megjelenés, amely megvédi az utasteret és javítja az autó esztétikáját.',
+                icon: '🔒',
+              },
+              {
+                title: 'Prémium Megjelenés',
+                description: 'Profi kivitelezés, amely az autó értékét és stílusát emeli.',
+                icon: '✨',
+              },
+            ].map((service, idx) => (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-background p-8 rounded-lg border border-border hover:shadow-lg transition-all"
+                transition={{ duration: 0.6, delay: idx * 0.1 }}
+                whileHover={{ y: -8 }}
+                className="p-8 border border-black/10 rounded-2xl hover:border-accent hover:bg-accent/5 transition-all group"
               >
-                <h3 className="font-heading text-lg mb-3">{service.title}</h3>
-                <p className="font-body text-sm text-foreground/70">{service.description}</p>
+                <div className="text-5xl mb-6">{service.icon}</div>
+                <h3 className="text-2xl font-bold mb-4">{service.title}</h3>
+                <p className="text-black/60 leading-relaxed">{service.description}</p>
               </motion.div>
             ))}
           </div>
@@ -276,144 +284,45 @@ export default function Home() {
       </section>
 
       {/* Process Section */}
-      <section className="bg-background py-24">
-        <div className="container">
+      <section id="process" className="bg-black text-white py-32">
+        <div className="container max-w-7xl mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-16"
+            transition={{ duration: 0.8 }}
+            className="mb-20"
           >
-            <h2 className="section-headline">Egyszerű folyamat, gyors egyeztetés</h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {process.map((item, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="flex flex-col items-center text-center"
-              >
-                <div className="w-16 h-16 rounded-full bg-accent text-accent-foreground flex items-center justify-center font-display text-2xl mb-4">
-                  {item.step}
-                </div>
-                <h3 className="font-heading text-lg mb-2">{item.title}</h3>
-                <p className="font-body text-sm text-foreground/70">{item.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Gallery Section */}
-      <section id="gallery" className="bg-secondary/30 py-24 border-y border-border">
-        <div className="container">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-16"
-          >
-            <h2 className="section-headline">Munkáink</h2>
-            <p className="font-body text-foreground/70 mt-4 max-w-2xl">
-              Prémium autóüveg-fóliázási munkák, amelyek az autó értékét és stílusát emelik.
+            <h2 className="text-6xl md:text-7xl font-black mb-6">
+              A Folyamat
+            </h2>
+            <p className="text-xl text-white/60 max-w-2xl">
+              Egyszerű, transzparens, és professzionális megoldás.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3, 4, 5, 6].map((idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="aspect-square bg-gradient-to-br from-muted to-secondary rounded-lg overflow-hidden hover:shadow-lg transition-all"
-              >
-                <div className="w-full h-full flex items-center justify-center bg-muted/50">
-                  <p className="font-body text-foreground/50">Munkaminta {idx}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Trust Section */}
-      <section className="bg-background py-24">
-        <div className="container">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-16"
-          >
-            <h2 className="section-headline">Miért minket választanak?</h2>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {[
-              { title: 'Prémium megjelenés', desc: 'Professzionális és luxus hatás' },
-              { title: 'Minőségi kivitelezés', desc: 'Precíz munka, prémium anyagok' },
-              { title: 'Gyors elérhetőség', desc: 'Messengeren, telefonon, emailen' },
-              { title: 'Helyi szolgáltatás', desc: 'Szombathely, személyes konzultáció' },
+              { step: '01', title: 'Kapcsolatfelvétel', desc: 'Messengeren, telefonon vagy emailen' },
+              { step: '02', title: 'Konzultáció', desc: 'Személyre szabott ajánlat és időpont' },
+              { step: '03', title: 'Kivitelezés', desc: 'Profi munka, prémium anyagok' },
             ].map((item, idx) => (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="text-center"
+                transition={{ duration: 0.6, delay: idx * 0.15 }}
+                className="relative"
               >
-                <h3 className="font-heading text-lg mb-2">{item.title}</h3>
-                <p className="font-body text-sm text-foreground/70">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ Section */}
-      <section id="faq" className="bg-secondary/30 py-24 border-y border-border">
-        <div className="container max-w-3xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-16"
-          >
-            <h2 className="section-headline">Gyakori kérdések</h2>
-          </motion.div>
-
-          <div className="space-y-4">
-            {faqItems.map((item, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="bg-background border border-border rounded-lg overflow-hidden"
-              >
-                <button
-                  onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
-                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-secondary/50 transition"
-                >
-                  <h3 className="font-heading text-left">{item.question}</h3>
-                  {expandedFaq === idx ? (
-                    <Minus className="w-5 h-5 text-accent flex-shrink-0" />
-                  ) : (
-                    <Plus className="w-5 h-5 text-accent flex-shrink-0" />
-                  )}
-                </button>
-                {expandedFaq === idx && (
+                <div className="text-6xl font-black text-white/10 mb-4">{item.step}</div>
+                <h3 className="text-2xl font-bold mb-3">{item.title}</h3>
+                <p className="text-white/60">{item.desc}</p>
+                {idx < 2 && (
                   <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="px-6 py-4 border-t border-border bg-secondary/20"
+                    animate={{ x: [0, 8, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute -right-16 top-1/2 transform -translate-y-1/2 hidden md:block"
                   >
-                    <p className="font-body text-foreground/70">{item.answer}</p>
+                    <ArrowRight className="w-6 h-6 text-accent" />
                   </motion.div>
                 )}
               </motion.div>
@@ -422,111 +331,125 @@ export default function Home() {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section id="faq" className="bg-white py-32 border-t border-black/5">
+        <div className="container max-w-4xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="mb-20"
+          >
+            <h2 className="text-6xl md:text-7xl font-black mb-6">
+              Gyakori Kérdések
+            </h2>
+          </motion.div>
+
+          <div className="space-y-4">
+            {faqItems.map((item, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: idx * 0.1 }}
+                className="border border-black/10 rounded-xl overflow-hidden hover:border-accent transition-colors"
+              >
+                <button
+                  onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
+                  className="w-full p-6 flex items-center justify-between hover:bg-black/2 transition-colors"
+                >
+                  <h3 className="text-lg font-bold text-left">{item.question}</h3>
+                  <motion.div
+                    animate={{ rotate: expandedFaq === idx ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <ChevronDown className="w-5 h-5 text-accent" />
+                  </motion.div>
+                </button>
+                <AnimatePresence>
+                  {expandedFaq === idx && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="px-6 pb-6 border-t border-black/5"
+                    >
+                      <p className="text-black/70 leading-relaxed">{item.answer}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Contact Section */}
-      <section id="contact" className="bg-background py-24">
-        <div className="container max-w-4xl">
+      <section id="contact" className="bg-black text-white py-32">
+        <div className="container max-w-4xl mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
+            transition={{ duration: 0.8 }}
+            className="mb-16 text-center"
           >
-            <h2 className="section-headline mb-4">Kérj időpontot vagy érdeklődj most</h2>
-            <p className="font-body text-foreground/70">
-              Töltsd ki az alábbi űrlapot, és hamarosan felvesszük veled a kapcsolatot.
+            <h2 className="text-6xl md:text-7xl font-black mb-6">
+              Kapcsolat
+            </h2>
+            <p className="text-xl text-white/60">
+              Vedd fel velünk a kapcsolatot, és kérj időpontot még ma.
             </p>
           </motion.div>
 
-          {/* Contact Form */}
-          <div className="mb-16 bg-secondary/30 p-8 rounded-lg border border-border">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="bg-white/5 backdrop-blur p-12 rounded-2xl border border-white/10 mb-12"
+          >
             <ContactForm />
-          </div>
-
-          {/* Alternative Contact Methods */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            <motion.a
-              href="tel:+36303999625"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              className="bg-secondary/50 p-8 rounded-lg text-center hover:bg-accent hover:text-accent-foreground transition-all group"
-            >
-              <Phone className="w-8 h-8 mx-auto mb-4 group-hover:scale-110 transition" />
-              <h3 className="font-heading mb-2">Telefon</h3>
-              <p className="font-body text-sm">+36 30 399 9625</p>
-            </motion.a>
-
-            <motion.a
-              href="mailto:dtlcustoms@info.com"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-secondary/50 p-8 rounded-lg text-center hover:bg-accent hover:text-accent-foreground transition-all group"
-            >
-              <Mail className="w-8 h-8 mx-auto mb-4 group-hover:scale-110 transition" />
-              <h3 className="font-heading mb-2">Email</h3>
-              <p className="font-body text-sm">dtlcustoms@info.com</p>
-            </motion.a>
-
-            <motion.a
-              href="https://m.me/61587179489147"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-secondary/50 p-8 rounded-lg text-center hover:bg-accent hover:text-accent-foreground transition-all group"
-            >
-              <MessageCircle className="w-8 h-8 mx-auto mb-4 group-hover:scale-110 transition" />
-              <h3 className="font-heading mb-2">Messenger</h3>
-              <p className="font-body text-sm">Üzenet küldése</p>
-            </motion.a>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="p-8 bg-secondary/30 rounded-lg border border-border text-center"
-          >
-            <p className="font-body text-foreground/70">
-              <span className="font-heading">Nyitva: szerda–vasárnap</span>
-            </p>
-            <p className="font-body text-sm text-foreground/60 mt-2">
-              Szombathely, Körmendi út 45
-            </p>
           </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <p className="text-white/60 mb-2">Telefon</p>
+              <a href="tel:+36303999625" className="text-2xl font-bold hover:text-accent transition">
+                +36 30 399 9625
+              </a>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <p className="text-white/60 mb-2">Email</p>
+              <a href="mailto:dtlcustoms@info.com" className="text-2xl font-bold hover:text-accent transition">
+                dtlcustoms@info.com
+              </a>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <p className="text-white/60 mb-2">Nyitva</p>
+              <p className="text-2xl font-bold">Szerda–Vasárnap</p>
+            </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-foreground text-background py-12 border-t border-border">
-        <div className="container">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h3 className="font-display text-lg mb-4">DTL Customs</h3>
-              <p className="font-body text-sm opacity-70">Prémium autóüveg-fóliázás Szombathelyen</p>
-            </div>
-            <div>
-              <h4 className="font-heading text-sm mb-3">Elérhetőség</h4>
-              <ul className="font-body text-sm space-y-2 opacity-70">
-                <li>+36 30 399 9625</li>
-                <li>dtlcustoms@info.com</li>
-                <li>Messenger</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-heading text-sm mb-3">Nyitva</h4>
-              <p className="font-body text-sm opacity-70">Szerda–vasárnap</p>
-            </div>
-            <div>
-              <h4 className="font-heading text-sm mb-3">Hely</h4>
-              <p className="font-body text-sm opacity-70">Szombathely, Körmendi út 45</p>
-            </div>
-          </div>
-
-          <div className="border-t border-background/20 pt-8">
-            <p className="font-body text-sm opacity-70 text-center">
-              © 2026 DTL Customs. Minden jog fenntartva.
-            </p>
-          </div>
+      <footer className="bg-black border-t border-white/10 py-12">
+        <div className="container max-w-7xl mx-auto px-6 text-center">
+          <p className="text-white/40 text-sm">
+            © 2026 DTL Customs. Prémium Autóüveg-Fóliázás. Szombathely.
+          </p>
         </div>
       </footer>
     </div>
