@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, Phone, Mail, MessageCircle, Plus, Minus } from 'lucide-react';
+import ContactForm from '@/components/ContactForm';
+import HeroAnimation from '@/components/HeroAnimation';
 
 /**
  * DTL Customs - Premium Autóüveg-fóliázás Landing Page
@@ -13,17 +15,8 @@ import { ChevronDown, Phone, Mail, MessageCircle, Plus, Minus } from 'lucide-rea
  */
 
 export default function Home() {
-  const [currentTintIndex, setCurrentTintIndex] = useState(0);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
-
-  // Hero car animation - cycle through tint levels
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTintIndex((prev) => (prev + 1) % 4);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, []);
 
   // Sticky nav background on scroll
   useEffect(() => {
@@ -34,14 +27,7 @@ export default function Home() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const tintImages = [
-    'https://d2xsxph8kpxj0f.cloudfront.net/310519663484977226/PDCnGRWrpwew4UbLR7rtwx/hero-car-side-profile-dWe3yM5yRoXB4HtFKUiHPy.webp',
-    'https://d2xsxph8kpxj0f.cloudfront.net/310519663484977226/PDCnGRWrpwew4UbLR7rtwx/hero-car-tinted-light-7SEtY3ChWJrUNkc2d6wEPW.webp',
-    'https://d2xsxph8kpxj0f.cloudfront.net/310519663484977226/PDCnGRWrpwew4UbLR7rtwx/hero-car-tinted-medium-dDdAEwSPnpRxHT37TvVKWa.webp',
-    'https://d2xsxph8kpxj0f.cloudfront.net/310519663484977226/PDCnGRWrpwew4UbLR7rtwx/hero-car-tinted-dark-bwbYrgNiiaPZR4sVEr3row.webp',
-  ];
 
-  const tintLabels = ['Tiszta üveg', 'Könnyű árnyékolás', 'Közepes árnyékolás', 'Prémium sötét'];
 
   const benefits = [
     { title: 'UV- és hővédelem', description: 'Csökkent hőterhelés és UV sugárzás' },
@@ -156,36 +142,10 @@ export default function Home() {
             </p>
           </motion.div>
 
-          {/* Right: Animated Car */}
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="relative h-full flex items-center justify-center"
-          >
-            <div className="relative w-full max-w-2xl">
-              <motion.img
-                key={currentTintIndex}
-                src={tintImages[currentTintIndex]}
-                alt={tintLabels[currentTintIndex]}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full h-auto object-contain"
-              />
-              <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-                {tintLabels.map((label, idx) => (
-                  <motion.div
-                    key={idx}
-                    className={`h-2 rounded-full transition-all ${
-                      idx === currentTintIndex ? 'bg-accent w-8' : 'bg-white/30 w-2'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-          </motion.div>
+          {/* Right: Animated Car with Advanced Tint Animation */}
+          <div className="relative h-full flex items-center justify-center">
+            <HeroAnimation carImageUrl="https://d2xsxph8kpxj0f.cloudfront.net/310519663484977226/PDCnGRWrpwew4UbLR7rtwx/hero-car-side-profile-dWe3yM5yRoXB4HtFKUiHPy.webp" />
+          </div>
         </div>
 
         {/* Scroll Indicator */}
@@ -464,7 +424,7 @@ export default function Home() {
 
       {/* Contact Section */}
       <section id="contact" className="bg-background py-24">
-        <div className="container max-w-3xl">
+        <div className="container max-w-4xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -473,11 +433,17 @@ export default function Home() {
           >
             <h2 className="section-headline mb-4">Kérj időpontot vagy érdeklődj most</h2>
             <p className="font-body text-foreground/70">
-              Telefonon, e-mailben vagy Messengeren is felveheted velünk a kapcsolatot.
+              Töltsd ki az alábbi űrlapot, és hamarosan felvesszük veled a kapcsolatot.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Contact Form */}
+          <div className="mb-16 bg-secondary/30 p-8 rounded-lg border border-border">
+            <ContactForm />
+          </div>
+
+          {/* Alternative Contact Methods */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
             <motion.a
               href="tel:+36303999625"
               initial={{ opacity: 0, y: 20 }}
@@ -518,7 +484,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="mt-12 p-8 bg-secondary/30 rounded-lg border border-border text-center"
+            className="p-8 bg-secondary/30 rounded-lg border border-border text-center"
           >
             <p className="font-body text-foreground/70">
               <span className="font-heading">Nyitva: szerda–vasárnap</span>
